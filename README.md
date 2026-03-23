@@ -56,4 +56,4 @@ cargo run --release -- \
 - `ApiClient`：HTTP 请求与鉴权
 - `discover_all_stock_codes`：全市场股票列表发现
 - `normalize_full_kline_response`：响应结构兼容与归一化
-- `fetch_period`：按周期分批抓取 + 进度输出 + 文件写出
+- `SwanLakeSink`：按架构目录写入 raw/curated（当前为方法层接入）
