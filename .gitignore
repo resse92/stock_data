@@ -1,0 +1,30 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+
+# Runtime outputs (fetch job)
+/output/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Local data files
+/data/
+*.duckdb
+*.duckdb-wal
+*.duckdb-shm
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
