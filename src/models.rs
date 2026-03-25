@@ -53,6 +53,44 @@ pub struct NormalizedBar {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TickQuote {
+    pub symbol: String,
+    pub exchange: String,
+    pub time: String,
+    pub last_price: Option<f64>,
+    pub open: Option<f64>,
+    pub high: Option<f64>,
+    pub low: Option<f64>,
+    pub last_close: Option<f64>,
+    pub amount: Option<f64>,
+    pub volume: Option<f64>,
+    pub pvolume: Option<f64>,
+    pub stock_status: Option<String>,
+    pub open_interest: Option<f64>,
+    pub last_settlement_price: Option<f64>,
+    pub ask_price_1: Option<f64>,
+    pub ask_price_2: Option<f64>,
+    pub ask_price_3: Option<f64>,
+    pub ask_price_4: Option<f64>,
+    pub ask_price_5: Option<f64>,
+    pub bid_price_1: Option<f64>,
+    pub bid_price_2: Option<f64>,
+    pub bid_price_3: Option<f64>,
+    pub bid_price_4: Option<f64>,
+    pub bid_price_5: Option<f64>,
+    pub ask_vol_1: Option<f64>,
+    pub ask_vol_2: Option<f64>,
+    pub ask_vol_3: Option<f64>,
+    pub ask_vol_4: Option<f64>,
+    pub ask_vol_5: Option<f64>,
+    pub bid_vol_1: Option<f64>,
+    pub bid_vol_2: Option<f64>,
+    pub bid_vol_3: Option<f64>,
+    pub bid_vol_4: Option<f64>,
+    pub bid_vol_5: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DailyBar {
     pub symbol: String,
     pub exchange: String,
@@ -63,8 +101,8 @@ pub struct DailyBar {
     pub close: Option<f64>,
     pub volume: Option<f64>,
     pub amount: Option<f64>,
-    pub turnover_rate: Option<f64>,
-    pub adj_factor: Option<f64>,
+    pub settle: Option<f64>,
+    pub open_interest: Option<f64>,
     pub source: Option<String>,
 }
 
@@ -79,6 +117,8 @@ pub struct MinuteBar1m {
     pub close: Option<f64>,
     pub volume: Option<f64>,
     pub amount: Option<f64>,
+    pub settle: Option<f64>,
+    pub open_interest: Option<f64>,
     pub source: Option<String>,
 }
 
@@ -116,8 +156,8 @@ impl DailyBar {
             close: raw.close,
             volume: raw.volume,
             amount: raw.amount,
-            turnover_rate: raw.turnover_rate,
-            adj_factor: raw.adj_factor,
+            settle: raw.settle,
+            open_interest: raw.open_interest,
             source: None,
         })
     }
@@ -140,6 +180,8 @@ impl MinuteBar1m {
             close: raw.close,
             volume: raw.volume,
             amount: raw.amount,
+            settle: raw.settle,
+            open_interest: raw.open_interest,
             source: None,
         })
     }

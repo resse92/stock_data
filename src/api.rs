@@ -105,7 +105,7 @@ impl ApiClient {
     }
 
     pub async fn discover_all_stock_codes(&self) -> Result<Vec<String>> {
-        let broad_candidates = ["沪深京A股"];
+        let broad_candidates = ["沪深A股"];
 
         for sector_name in broad_candidates {
             match self.fetch_sector_stocks(sector_name).await {
@@ -140,6 +140,8 @@ impl ApiClient {
         if all_codes.is_empty() {
             return Err(anyhow!("遍历板块后仍未获取到任何股票代码"));
         }
+
+        println!("{:?}", all_codes);
 
         Ok(all_codes.into_iter().collect())
     }

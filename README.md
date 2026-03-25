@@ -34,22 +34,25 @@
 - `turnover_rate/open_interest/settle/adj_factor`
 - `extra_json`
 
-## 运行
+## 运行（MinIO）
 
 ```bash
-cd /Users/resse/Desktop/stock_data/rust_kline_fetcher
-cargo run --release -- \
-  --base-url http://127.0.0.1:8000 \
-  --chunk-size 200 \
-  --output-dir output \
-  --save-raw-batches
+cd /Users/resse/Desktop/stock_data
+cargo run --release -- sync-daily \
+  --start-date 2026-03-01 \
+  --end-date 2026-03-24 \
+  --chunk-size 200
 ```
 
-也支持 `.env` / 环境变量：
+`.env` 里至少配置：
 
 - `QMT_API_HOST`
 - `QMT_API_AUTHORIZATION`
 - `QMT_API_TIMEOUT`
+- `s3_host` 或 `S3_HOST`（MinIO endpoint，如 `192.168.2.139:40711`）
+- `S3_ACCESS_KEY`
+- `S3_SECRET_KEY`
+- `S3_BUCKET`（默认 `stock`）
 
 ## 代码结构
 
