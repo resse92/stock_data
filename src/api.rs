@@ -105,45 +105,92 @@ impl ApiClient {
     }
 
     pub async fn discover_all_stock_codes(&self) -> Result<Vec<String>> {
-        let broad_candidates = ["沪深A股"];
-
-        for sector_name in broad_candidates {
-            match self.fetch_sector_stocks(sector_name).await {
-                Ok(v) => {
-                    let codes: BTreeSet<String> = extract_stock_list(&v).into_iter().collect();
-                    if !codes.is_empty() {
-                        return Ok(codes.into_iter().collect());
-                    }
-                }
-                Err(_) => continue,
-            }
-        }
-
-        let sector_resp = self
-            .fetch_sectors()
+        let sector_name = "沪深A股";
+        let v = self
+            .fetch_sector_stocks(sector_name)
             .await
-            .context("调用 /api/v1/data/sectors 失败")?;
-        let sector_names = extract_sector_names(&sector_resp);
-        if sector_names.is_empty() {
-            return Err(anyhow!("无法从 /api/v1/data/sectors 推导板块列表"));
+            .with_context(|| format!("调用 /api/v1/data/sector 失败: {sector_name}"))?;
+        let codes: BTreeSet<String> = extract_stock_list(&v)
+            .into_iter()
+            .filter(|code| is_hsba_a_share(code))
+            .collect();
+        if codes.is_empty() {
+            return Err(anyhow!("板块 {sector_name} 未返回任何沪深京A股代码"));
         }
+        Ok(codes.into_iter().collect())
+    }
+}
 
-        let mut all_codes = BTreeSet::new();
-        for sector_name in sector_names {
-            if let Ok(v) = self.fetch_sector_stocks(&sector_name).await {
-                for code in extract_stock_list(&v) {
-                    all_codes.insert(code);
-                }
-            }
-        }
+fn is_hsba_a_share(code: &str) -> bool {
+    let trimmed = code.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
 
-        if all_codes.is_empty() {
-            return Err(anyhow!("遍历板块后仍未获取到任何股票代码"));
-        }
+    let mut exchange = None;
+    let mut symbol = trimmed;
+    if let Some((left, right)) = trimmed.rsplit_once('.') {
+        symbol = left.trim();
+        exchange = Some(right.trim().to_ascii_uppercase());
+    }
 
-        println!("{:?}", all_codes);
+    let digits: String = symbol.chars().filter(|c| c.is_ascii_digit()).collect();
+    if digits.len() < 6 {
+        return false;
+    }
+    let d6 = &digits[..6];
 
-        Ok(all_codes.into_iter().collect())
+    let sh_a = d6.starts_with("600")
+        || d6.starts_with("601")
+        || d6.starts_with("603")
+        || d6.starts_with("605")
+        || d6.starts_with("688")
+        || d6.starts_with("689");
+    let sz_a = d6.starts_with("000")
+        || d6.starts_with("001")
+        || d6.starts_with("002")
+        || d6.starts_with("003")
+        || d6.starts_with("300")
+        || d6.starts_with("301");
+    let bj_a = d6.starts_with("430")
+        || d6.starts_with("440")
+        || d6.starts_with("830")
+        || d6.starts_with("831")
+        || d6.starts_with("832")
+        || d6.starts_with("833")
+        || d6.starts_with("834")
+        || d6.starts_with("835")
+        || d6.starts_with("836")
+        || d6.starts_with("837")
+        || d6.starts_with("838")
+        || d6.starts_with("839")
+        || d6.starts_with("870")
+        || d6.starts_with("871")
+        || d6.starts_with("872")
+        || d6.starts_with("873")
+        || d6.starts_with("874")
+        || d6.starts_with("875")
+        || d6.starts_with("876")
+        || d6.starts_with("877")
+        || d6.starts_with("878")
+        || d6.starts_with("879")
+        || d6.starts_with("880")
+        || d6.starts_with("881")
+        || d6.starts_with("882")
+        || d6.starts_with("883")
+        || d6.starts_with("884")
+        || d6.starts_with("885")
+        || d6.starts_with("886")
+        || d6.starts_with("887")
+        || d6.starts_with("888")
+        || d6.starts_with("920");
+
+    match exchange.as_deref() {
+        Some("SH") => sh_a,
+        Some("SZ") => sz_a,
+        Some("BJ") => bj_a,
+        Some(_) => false,
+        None => sh_a || sz_a || bj_a,
     }
 }
 
@@ -187,52 +234,6 @@ fn extract_stock_list(v: &Value) -> Vec<String> {
                 }
             }
             vec![]
-        }
-        _ => vec![],
-    }
-}
-
-fn extract_sector_names(v: &Value) -> Vec<String> {
-    match v {
-        Value::Null => vec![],
-        Value::Array(arr) => {
-            let mut out = Vec::new();
-            for item in arr {
-                match item {
-                    Value::String(s) => out.push(s.to_string()),
-                    Value::Object(obj) => {
-                        if let Some(name) = obj
-                            .get("sector_name")
-                            .or_else(|| obj.get("name"))
-                            .and_then(|x| x.as_str())
-                        {
-                            out.push(name.to_string());
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            out
-        }
-        Value::Object(obj) => {
-            if let Some(name) = obj.get("sector_name").and_then(|x| x.as_str()) {
-                return vec![name.to_string()];
-            }
-            for key in ["data", "result", "items", "sectors"] {
-                if let Some(nested) = obj.get(key) {
-                    let inner = extract_sector_names(nested);
-                    if !inner.is_empty() {
-                        return inner;
-                    }
-                }
-            }
-            let meta_keys = ["code", "msg", "message", "success", "status"];
-            obj.iter()
-                .filter(|(k, v)| {
-                    !meta_keys.contains(&k.as_str()) && (v.is_object() || v.is_array())
-                })
-                .map(|(k, _)| k.to_string())
-                .collect()
         }
         _ => vec![],
     }
