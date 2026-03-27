@@ -12,6 +12,7 @@ use minio::s3::creds::StaticProvider;
 use minio::s3::http::BaseUrl;
 use minio::s3::segmented_bytes::SegmentedBytes;
 use minio::s3::types::S3Api;
+use parquet::basic::Compression;
 use parquet::arrow::ArrowWriter;
 use parquet::file::properties::WriterProperties;
 
@@ -173,7 +174,10 @@ fn to_parquet_bytes(bars: &[DailyBar]) -> Result<Vec<u8>> {
         ],
     )?;
 
-    let props = WriterProperties::builder().build();
+    let props = WriterProperties::builder()
+        .set_compression(Compression::SNAPPY)
+        .set_max_row_group_size(128 * 1024)
+        .build();
     let mut cursor = Cursor::new(Vec::new());
     {
         let mut writer = ArrowWriter::try_new(&mut cursor, schema, Some(props))?;
