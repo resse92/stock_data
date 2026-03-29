@@ -4,4 +4,5 @@ pub mod normalize;
 pub mod s3;
 pub mod sync_daily;
 pub mod swanlake;
+pub mod import_daily_zip;
 pub mod utils;
