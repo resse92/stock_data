@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use rust_kline_fetcher::import_daily_zip::{run_import_daily_zip, ImportDailyZipArgs};
+use rust_kline_fetcher::import_index_csv::{run_import_index_csv, ImportIndexCsvArgs};
 use rust_kline_fetcher::sync_daily::{run_sync_daily, SyncDailyArgs};
 
 #[derive(Debug, Parser)]
@@ -17,6 +18,8 @@ enum Commands {
     SyncDaily(SyncDailyArgs),
     /// 从本地 zip 导入日线 CSV 并写入 S3 parquet
     ImportDailyZip(ImportDailyZipArgs),
+    /// 从本地目录导入指数 CSV 并写入 S3 parquet
+    ImportIndexCsv(ImportIndexCsvArgs),
 }
 
 #[tokio::main]
@@ -27,5 +30,6 @@ async fn main() -> Result<()> {
     match cli.command {
         Commands::SyncDaily(args) => run_sync_daily(args).await,
         Commands::ImportDailyZip(args) => run_import_daily_zip(args).await,
+        Commands::ImportIndexCsv(args) => run_import_index_csv(args).await,
     }
 }
