@@ -6,4 +6,5 @@ pub mod sync_daily;
 pub mod swanlake;
 pub mod import_daily_zip;
 pub mod import_index_csv;
+pub mod import_minute_zip;
 pub mod utils;
